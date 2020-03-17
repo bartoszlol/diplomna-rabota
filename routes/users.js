@@ -6,76 +6,76 @@ var LocalStrategy = require('passport-local').Strategy;
 var User = require('../models/user');
 
 // Регистрация
-router.get('/register', function(req, res){ //задаване на регистър формата.
+router.get('/register', function(req, res){
 	res.render('register');
 });
 
 // Логин страница
-router.get('/login', function(req, res){ //задаване на логин формата.
+router.get('/login', function(req, res){
 	res.render('login');
 });
 
 // Регистрация на потребителя
-router.post('/register', function(req, res){     // Регистрация на потребителите 
-	var name = req.body.name;                      // Въвеждане на име на потребителя
-	var email = req.body.email;						// имейл
-	var username = req.body.username;				// username
-	var password = req.body.password;              // парола
-	var password2 = req.body.password2;            // парола
+router.post('/register', function(req, res){
+	var name = req.body.name;
+	var email = req.body.email;
+	var username = req.body.username;
+	var password = req.body.password;
+	var password2 = req.body.password2;
 
 	// Валидация
-	req.checkBody('name', 'Name is required').notEmpty();     // Чрез checkBody проверяваме тялото, като ако няма въведени данни връща грешка. Функция .notEmpty се използва за валидация.
-	req.checkBody('email', 'Email is required').notEmpty();   // същото.
-	req.checkBody('email', 'Email is not valid').isEmail();    // имейл - същото.
-	req.checkBody('username', 'Username is required').notEmpty(); //същото.
-	req.checkBody('password', 'Password is required').notEmpty(); //същото.
-	req.checkBody('password2', 'Passwords do not match').equals(req.body.password); // проверя по първата парола! с функция equals();
+	req.checkBody('name', 'Name is required').notEmpty();
+	req.checkBody('email', 'Email is required').notEmpty();
+	req.checkBody('email', 'Email is not valid').isEmail();
+	req.checkBody('username', 'Username is required').notEmpty();
+	req.checkBody('password', 'Password is required').notEmpty();
+	req.checkBody('password2', 'Passwords do not match').equals(req.body.password);
 
-	var errors = req.validationErrors();  // 
+	var errors = req.validationErrors();
 
 	if(errors){
-		res.render('register',{           // от ред 36 до 39 Генериране на грешка и изпращане на регистър форма.
+		res.render('register',{
 			errors:errors
 		});
 	} else {
-		var newUser = new User({      // Нов потребител
+		var newUser = new User({
 			name: name,
 			email:email,
 			username: username,
 			password: password
 		});
 
-		User.createUser(newUser, function(err, user){ // Създаване на функция за създаване на нов потребител.
+		User.createUser(newUser, function(err, user){
 			if(err) throw err;
 			console.log(user);
 		});
 
-		req.flash('success_msg', 'You are registered and can now login'); // Съобщение за регистриран потребител.
+		req.flash('success_msg', 'You are registered and can now login');
 
-		res.redirect('/users/login'); // Изпращане на съотвеният адрес users/login.
+		res.redirect('/users/login');
 	}
 });
 
-passport.use(new LocalStrategy(                                                                          // Нова локална стратегия
-  function(username, password, done) {											                           //Проверка чрез username, парола и done.
-   User.getUserByUsername(username, function(err, user){                                       //проверка чрез username 
-   	if(err) throw err;																			             // ако е грешка хвърли грешката.
-   	if(!user){																				 // ако не е user върни done стойностите са две : null и съответната грешка.
+passport.use(new LocalStrategy(
+  function(username, password, done) {
+   User.getUserByUsername(username, function(err, user){
+   	if(err) throw err;
+   	if(!user){
    		return done(null, false, {message: 'Unknown User'});
    	}
 
-   	User.comparePassword(password, user.password, function(err, isMatch){                                                                          // Проверка чрез парола и user.password 
-   		if(err) throw err;																	                                            // ако е грешка, хвърли грешката.
-   		if(isMatch){																			                                         // ако е така върни null или user.
+   	User.comparePassword(password, user.password, function(err, isMatch){
+   		if(err) throw err;
+   		if(isMatch){
    			return done(null, user);
    		} else {
-   			return done(null, false, {message: 'Invalid password'});                                                                      //ако не е върни грешка.
+   			return done(null, false, {message: 'Invalid password'});
    		}
    	});
    });
   }));
 
-passport.serializeUser(function(user, done) {       
+passport.serializeUser(function(user, done) {
   done(null, user.id);
 });
 
@@ -86,17 +86,17 @@ passport.deserializeUser(function(id, done) {
 })
 
 router.post('/login',
-  passport.authenticate('local', {successRedirect:'/', failureRedirect:'/users/login',failureFlash: true}),                                                           // Използва се локална стратегия, тъй като използваме локална база данни.
-  function(req, res) {                                                                                                                                        // Ако функцията се изпълни значи потребителят се е регистрирал.
+  passport.authenticate('local', {successRedirect:'/', failureRedirect:'/users/login',failureFlash: true}),
+  function(req, res) {
     res.redirect('/');
   });
 
-router.get('/logout', function(req, res){                                                                                                                   // излизане от приложението.
+router.get('/logout', function(req, res){
 	req.logout();
 
-	req.flash('success_msg', 'You are logged out');                                                                                                   //изписване на съобщение 
+	req.flash('success_msg', 'You are logged out');
 
-	res.redirect('/users/login');                                                                                                                       // след като сме излязли от приложението ни изпраща на /user/login.
+	res.redirect('/users/login');
 });
 
 module.exports = router;

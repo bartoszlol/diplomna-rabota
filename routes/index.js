@@ -2,11 +2,11 @@ var express = require('express');
 var router = express.Router();
 
 
-router.get('/', isAuthenticated, function(req, res){   
+router.get('/', ensureAuthenticated, function(req, res){
 	res.render('index');
 });
 
-function isAuthenticated(req, res, next){
+function ensureAuthenticated(req, res, next){
 	if(req.isAuthenticated()){
 		return next();
 	} else {
